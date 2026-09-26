@@ -1,0 +1,11 @@
+.git
+.venv
+.claude
+**/__pycache__
+backend/data
+backend/pipeline/*.pt
+frontend/node_modules
+frontend/dist
+*.md
+!README.md
+.DS_Store
