@@ -158,6 +158,8 @@ def from_ocr(path: str, w: int, h: int) -> ScaleInfo | None:
         top = h
         while top > int(h * 0.75) and dark[top - 1]:
             top -= 1
+    if h - top < 5:
+        return None                     # no info bar at all -> nothing to read
     crop = im.crop((0, top, w, h))
     big = ImageOps.invert(crop.resize((crop.width * 4, crop.height * 4), Image.LANCZOS))
     try:

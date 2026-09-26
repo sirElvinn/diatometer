@@ -222,6 +222,12 @@ footer {
   font-weight: 500;
 }
 
+.upload-card .segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+}
+
 .segmented.small button {
   padding: 5px 12px;
   font-size: 0.85rem;

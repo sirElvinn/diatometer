@@ -73,9 +73,10 @@ export function fmt(v: unknown, digits = 2): string {
   if (v === null || v === undefined || v === '') return '—'
   if (typeof v === 'number') {
     if (Number.isInteger(v)) return v.toLocaleString()
-    const abs = Math.abs(v)
-    if (abs !== 0 && abs < 0.01) return v.toPrecision(3)
-    return v.toFixed(digits)
+    // small values keep 3 significant figures (0.0331 µm/px), others `digits` decimals;
+    // trailing zeros are dropped either way (88.2, not 88.200)
+    const s = Math.abs(v) < 1 ? v.toPrecision(3) : v.toFixed(digits)
+    return String(Number(s))
   }
   if (typeof v === 'boolean') return v ? 'yes' : 'no'
   return String(v)
