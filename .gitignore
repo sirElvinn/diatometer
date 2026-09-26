@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# runtime data (uploads, results, sqlite index)
+backend/data/
+
+# model weights are downloaded on first run / in the Docker build
+*.pt
+
+# secrets
+*.json.key
+service-account*.json
+.env
+
+# frontend
+frontend/node_modules/
+frontend/dist/
+
+.DS_Store

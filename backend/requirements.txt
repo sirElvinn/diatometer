@@ -1,0 +1,17 @@
+# pipeline
+numpy
+pillow
+scipy
+scikit-image
+scikit-learn
+opencv-python-headless
+pandas
+openpyxl
+pytesseract      # only for screenshots without metadata (also needs the Tesseract app)
+ultralytics      # FastSAM (pulls in PyTorch)
+joblib
+# web
+fastapi
+uvicorn[standard]
+python-multipart
+gspread          # Google Sheets sync
