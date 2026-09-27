@@ -22,7 +22,9 @@ DATA_DIR = os.environ.get("DATA_DIR", os.path.join(os.path.dirname(os.path.abspa
 RUNS_DIR = os.path.join(DATA_DIR, "runs")
 os.makedirs(RUNS_DIR, exist_ok=True)
 
-_DB = os.path.join(DATA_DIR, "runs.db")
+# The index can live elsewhere (e.g. local disk when DATA_DIR is a network volume);
+# result.json files are the source of truth and the index is rebuilt from them if empty.
+_DB = os.environ.get("DB_PATH", os.path.join(DATA_DIR, "runs.db"))
 _lock = threading.Lock()
 
 
@@ -43,6 +45,17 @@ with _conn() as c:
         seconds REAL,
         sheet_status TEXT
     )""")
+    if c.execute("SELECT COUNT(*) FROM runs").fetchone()[0] == 0:
+        for _rid in os.listdir(RUNS_DIR):
+            _p = os.path.join(RUNS_DIR, _rid, "result.json")
+            if not os.path.exists(_p):
+                continue
+            with open(_p) as _fh:
+                _r = json.load(_fh)
+            _im = _r.get("image", {})
+            c.execute("INSERT OR IGNORE INTO runs VALUES (?,?,?,?,?,?,?,?)",
+                      (_rid, _r["created_at"], _r["filename"], _im.get("sample_type"),
+                       _im.get("n_frustules"), _im.get("n_pores"), _im.get("seconds"), None))
 
 
 def run_dir(run_id: str) -> str:
