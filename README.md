@@ -124,4 +124,5 @@ DigitalOcean App Platform (they set `PORT` automatically).
   and overlapping shells sometimes merge into one outline, so Didymo is over-graded as fragmented.
 - Pores are only measured on close-ups. At 3,000× a Thaps pore is smaller than a pixel, so the app says
   "not measured" instead of guessing.
-- The sample-type model scores 76% on held-out imaging sessions, and 91% when it is confident. Otherwise it answers "unsure".
+- The sample-type model scores 77% on held-out imaging sessions (each session predicted by a model that never saw it),
+  and 86% on the 71% of images where it is confident. Otherwise it answers "unsure".
