@@ -63,13 +63,16 @@ def clean(v):
 
 
 def save_run(run_id: str, created_at: str, filename: str, image: dict,
-             frustules: list[dict], pores: list[dict]) -> None:
+             frustules: list[dict], pores: list[dict],
+             outlines: dict[str, list] | None = None) -> None:
+    """outlines: frustule_id -> list of polygons [[x, y], ...] in preview.png pixels."""
     image = {k: clean(v) for k, v in image.items()}
     frustules = [{k: clean(v) for k, v in r.items()} for r in frustules]
     pores = [{k: clean(v) for k, v in r.items()} for r in pores]
     with open(os.path.join(run_dir(run_id), "result.json"), "w") as fh:
         json.dump({"id": run_id, "created_at": created_at, "filename": filename,
-                   "image": image, "frustules": frustules, "pores": pores}, fh)
+                   "image": image, "frustules": frustules, "pores": pores,
+                   "outlines": outlines or {}}, fh, separators=(",", ":"))
     with _lock, _conn() as c:
         c.execute("INSERT OR REPLACE INTO runs VALUES (?,?,?,?,?,?,?,?)",
                   (run_id, created_at, filename, image.get("sample_type"),

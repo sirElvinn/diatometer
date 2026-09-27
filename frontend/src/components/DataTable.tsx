@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fmt, type Row } from '../api'
 
 interface Props {
@@ -6,9 +6,21 @@ interface Props {
   columns: { key: string; label: string }[]
   pageSize?: number
   empty?: string
+  /** makes rows clickable: rowKey picks the id passed to onRowClick / matched by selected */
+  rowKey?: string
+  selected?: string | number | null
+  onRowClick?: (key: string | number) => void
 }
 
-export default function DataTable({ rows, columns, pageSize = 25, empty = 'Nothing here.' }: Props) {
+export default function DataTable({
+  rows,
+  columns,
+  pageSize = 25,
+  empty = 'Nothing here.',
+  rowKey,
+  selected,
+  onRowClick,
+}: Props) {
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(null)
   const [page, setPage] = useState(0)
 
@@ -23,6 +35,18 @@ export default function DataTable({ rows, columns, pageSize = 25, empty = 'Nothi
       return (x < y ? -1 : 1) * sort.dir
     })
   }, [rows, sort])
+
+  // jump to the page that holds the selected row (e.g. after clicking it on the image)
+  useEffect(() => {
+    if (!rowKey || selected == null) return
+    const i = sorted.findIndex((r) => r[rowKey] === selected)
+    if (i >= 0) setPage(Math.floor(i / pageSize))
+  }, [selected, sorted, rowKey, pageSize])
+
+  // a filtered row list can be shorter than the current page
+  useEffect(() => {
+    setPage((p) => Math.min(p, Math.max(0, Math.ceil(rows.length / pageSize) - 1)))
+  }, [rows.length, pageSize])
 
   const pages = Math.max(1, Math.ceil(sorted.length / pageSize))
   const shown = sorted.slice(page * pageSize, (page + 1) * pageSize)
@@ -51,15 +75,23 @@ export default function DataTable({ rows, columns, pageSize = 25, empty = 'Nothi
             </tr>
           </thead>
           <tbody>
-            {shown.map((r, i) => (
-              <tr key={i}>
+            {shown.map((r, i) => {
+              const key = rowKey ? (r[rowKey] as string | number) : null
+              const isSel = key != null && key === selected
+              return (
+              <tr
+                key={i}
+                className={`${onRowClick ? 'clickable' : ''} ${isSel ? 'selected' : ''}`}
+                onClick={onRowClick && key != null ? () => onRowClick(key) : undefined}
+              >
                 {columns.map((c) => (
                   <td key={c.key} className={c.key === 'damage' ? `dmg dmg-${String(r[c.key]).split(' ')[0]}` : ''}>
                     {fmt(r[c.key], 3)}
                   </td>
                 ))}
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </table>
       </div>

@@ -8,6 +8,8 @@ export interface Run {
   image: Row
   frustules: Row[]
   pores: Row[]
+  /** frustule_id -> polygons of [x, y] in preview.png pixels (missing on older runs) */
+  outlines?: Record<string, number[][][]>
 }
 
 export interface RunSummary {

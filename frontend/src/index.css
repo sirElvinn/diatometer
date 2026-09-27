@@ -510,6 +510,253 @@ footer {
   gap: 8px;
 }
 
+.viewer-tools {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.check input {
+  accent-color: var(--accent);
+}
+
+.hint {
+  margin: 10px 2px 0;
+}
+
+/* interactive image: the stage is zoomed with a transform, the frame clips it */
+.stage-frame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.stage img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  user-select: none;
+}
+
+.stage svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.outlines .fr {
+  fill: rgba(255, 255, 255, 0);
+  stroke-width: 2;
+  cursor: pointer;
+  pointer-events: all;
+  transition: stroke-opacity 0.3s, fill 0.15s;
+}
+
+.outlines .fr:hover {
+  fill: rgba(255, 255, 255, 0.14);
+}
+
+.outlines.has-focus .fr {
+  stroke-opacity: 0.22;
+}
+
+.outlines.has-focus .fr:hover {
+  stroke-opacity: 0.7;
+  fill: rgba(255, 255, 255, 0.08);
+}
+
+.outlines .fr.is-selected {
+  stroke-opacity: 0;
+}
+
+.fr.intact,
+.fr-focus.intact {
+  stroke: var(--intact);
+}
+
+.fr.cracked,
+.fr-focus.cracked {
+  stroke: var(--cracked);
+}
+
+.fr.fragmented,
+.fr-focus.fragmented {
+  stroke: var(--fragmented);
+}
+
+.fr.partial,
+.fr-focus.partial {
+  stroke: var(--partial);
+}
+
+.outlines .dim {
+  fill: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.outlines.has-focus .dim {
+  opacity: 0.68;
+}
+
+.outlines .fr-focus {
+  fill: rgba(255, 255, 255, 0.04);
+  stroke-width: 3;
+  cursor: pointer;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+  animation: focus-in 0.35s ease-out;
+}
+
+@keyframes focus-in {
+  from {
+    stroke-opacity: 0;
+  }
+}
+
+.outlines .pores circle {
+  fill: none;
+  stroke: var(--pore);
+  stroke-width: 1;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.outlines .pores.focused circle {
+  opacity: 1;
+  stroke-width: 1.5;
+}
+
+/* focused frustule details */
+.focus-card {
+  border-left: 4px solid var(--partial);
+  animation: card-in 0.25s ease-out;
+}
+
+.focus-card.intact {
+  border-left-color: var(--intact);
+}
+
+.focus-card.cracked {
+  border-left-color: var(--cracked);
+}
+
+.focus-card.fragmented {
+  border-left-color: var(--fragmented);
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.focus-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.focus-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.focus-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.focus-nav button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.focus-nav button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.damage-pill {
+  display: inline-block;
+  margin: 10px 0 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--partial);
+}
+
+.damage-pill.intact {
+  background: var(--intact);
+}
+
+.damage-pill.cracked {
+  background: var(--cracked);
+  color: #2a1d00;
+}
+
+.damage-pill.fragmented {
+  background: var(--fragmented);
+}
+
+.focus-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin: 0 0 10px;
+}
+
+.focus-grid dt {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.focus-grid dd {
+  margin: 2px 0 0;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.95rem;
+}
+
+.focus-grid dd small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.focus-card p {
+  margin: 0;
+}
+
 img.sem {
   width: 100%;
   display: block;
@@ -744,6 +991,16 @@ td {
 
 tbody tr:hover {
   background: var(--surface-2);
+}
+
+tbody tr.clickable {
+  cursor: pointer;
+}
+
+tbody tr.selected,
+tbody tr.selected:hover {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 td.dmg::before {
