@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { fileUrl, fmt, getRun, SPECIES_SHORT, type Config, type Run } from '../api'
 import DataTable from '../components/DataTable'
+import FrustuleViewer, { damageClass } from '../components/FrustuleViewer'
 
 const FRUSTULE_COLS = [
   { key: 'frustule_id', label: '#' },
@@ -46,6 +47,45 @@ export default function Result({ config }: { config: Config | null }) {
   const [error, setError] = useState<string | null>(null)
   const [view, setView] = useState<'overlay' | 'preview'>('overlay')
   const [tab, setTab] = useState<'frustules' | 'pores'>('frustules')
+  const [zoom, setZoom] = useState(true)
+  const [params, setParams] = useSearchParams()
+  const selected = params.get('f') ? Number(params.get('f')) : null
+
+  const select = useCallback(
+    (fid: number | null) =>
+      setParams(fid == null ? {} : { f: String(fid) }, { replace: true, preventScrollReset: true }),
+    [setParams],
+  )
+
+  const ids = useMemo(
+    () => (run ? run.frustules.map((f) => Number(f.frustule_id)).sort((a, b) => a - b) : []),
+    [run],
+  )
+  const step = useCallback(
+    (dir: 1 | -1) => {
+      if (!ids.length) return
+      const i = selected == null ? (dir === 1 ? -1 : 0) : ids.indexOf(selected)
+      select(ids[(i + dir + ids.length) % ids.length])
+    },
+    [ids, selected, select],
+  )
+
+  // Esc clears the focus, arrow keys walk through the frustules
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return
+      if (e.key === 'Escape') select(null)
+      else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        step(1)
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault()
+        step(-1)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [select, step])
 
   useEffect(() => {
     setRun(null)
@@ -66,6 +106,8 @@ export default function Result({ config }: { config: Config | null }) {
   const total = num(im.n_frustules)
   const partial = total - num(im.n_intact) - num(im.n_cracked) - num(im.n_fragmented)
   const confidence = num(im.sample_type_confidence)
+  const focus = selected == null ? null : run.frustules.find((f) => Number(f.frustule_id) === selected) ?? null
+  const focusPores = focus ? run.pores.filter((p) => Number(p.frustule_id) === selected) : run.pores
 
   return (
     <div className="result">
@@ -104,13 +146,26 @@ export default function Result({ config }: { config: Config | null }) {
                 Original
               </button>
             </div>
-            <a className="muted small" href={fileUrl(run.id, `${view}.png`)} target="_blank" rel="noreferrer">
-              Open full size ↗
-            </a>
+            <div className="viewer-tools">
+              {view === 'overlay' && run.outlines && (
+                <label className="check small">
+                  <input type="checkbox" checked={zoom} onChange={(e) => setZoom(e.target.checked)} />
+                  Zoom to selection
+                </label>
+              )}
+              <a className="muted small" href={fileUrl(run.id, `${view}.png`)} target="_blank" rel="noreferrer">
+                Full size ↗
+              </a>
+            </div>
           </div>
-          <a href={fileUrl(run.id, `${view}.png`)} target="_blank" rel="noreferrer">
-            <img src={fileUrl(run.id, `${view}.png`)} alt={`${view} of ${run.filename}`} className="sem" />
-          </a>
+          <FrustuleViewer run={run} mode={view} selected={selected} onSelect={select} zoom={zoom} />
+          {view === 'overlay' && run.outlines && run.frustules.length > 0 && (
+            <p className="muted small hint">
+              {focus
+                ? 'Click the shell again, the background, or press Esc to see all. ← → to step through.'
+                : 'Click any outlined frustule to focus it.'}
+            </p>
+          )}
           <div className="legend">
             <span><i className="sw intact" />intact</span>
             <span><i className="sw cracked" />cracked</span>
@@ -121,6 +176,16 @@ export default function Result({ config }: { config: Config | null }) {
         </section>
 
         <aside className="stats">
+          {focus && (
+            <FocusCard
+              f={focus}
+              index={ids.indexOf(Number(focus.frustule_id))}
+              total={ids.length}
+              onPrev={() => step(-1)}
+              onNext={() => step(1)}
+              onClose={() => select(null)}
+            />
+          )}
           <div className="card stat-big">
             <div className="stat-label">Frustules in frame</div>
             <div className="stat-value">{fmt(im.n_frustules)}</div>
@@ -200,19 +265,90 @@ export default function Result({ config }: { config: Config | null }) {
             Frustules <span className="count">{run.frustules.length}</span>
           </button>
           <button className={tab === 'pores' ? 'on' : ''} onClick={() => setTab('pores')}>
-            Pores <span className="count">{run.pores.length.toLocaleString()}</span>
+            {focus ? `Pores of #${selected}` : 'Pores'}{' '}
+            <span className="count">{focusPores.length.toLocaleString()}</span>
           </button>
         </div>
         {tab === 'frustules' ? (
-          <DataTable rows={run.frustules} columns={FRUSTULE_COLS} empty="No frustules found in this image." />
+          <DataTable
+            rows={run.frustules}
+            columns={FRUSTULE_COLS}
+            empty="No frustules found in this image."
+            rowKey="frustule_id"
+            selected={selected}
+            onRowClick={(k) => {
+              select(Number(k) === selected ? null : Number(k))
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+          />
         ) : (
           <DataTable
-            rows={run.pores}
+            rows={focusPores}
             columns={PORE_COLS}
             empty={`No pores measured. ${im.pore_note ? String(im.pore_note) : ''}`}
           />
         )}
       </section>
+    </div>
+  )
+}
+
+const FOCUS_FIELDS: { key: string; label: string; unit?: string }[] = [
+  { key: 'length_um', label: 'Length', unit: 'µm' },
+  { key: 'width_um', label: 'Width', unit: 'µm' },
+  { key: 'area_um2', label: 'Area', unit: 'µm²' },
+  { key: 'aspect_ratio', label: 'Aspect ratio' },
+  { key: 'view', label: 'View' },
+  { key: 'orientation_deg', label: 'Long-axis angle', unit: '°' },
+  { key: 'head_direction_deg', label: 'Head points', unit: '°' },
+  { key: 'solidity', label: 'Solidity' },
+  { key: 'n_pores', label: 'Pores' },
+  { key: 'mean_pore_diameter_um', label: 'Mean pore Ø', unit: 'µm' },
+]
+
+function FocusCard(props: {
+  f: Run['frustules'][number]
+  index: number
+  total: number
+  onPrev: () => void
+  onNext: () => void
+  onClose: () => void
+}) {
+  const { f } = props
+  const cls = damageClass(f.damage)
+  return (
+    <div className={`card focus-card ${cls}`}>
+      <div className="focus-head">
+        <div>
+          <div className="stat-label">
+            Frustule {props.index + 1} of {props.total}
+          </div>
+          <div className="focus-title">
+            #{fmt(f.frustule_id)} · {SPECIES_SHORT[String(f.species)] ?? fmt(f.species)}
+          </div>
+        </div>
+        <div className="focus-nav">
+          <button onClick={props.onPrev} aria-label="Previous frustule">‹</button>
+          <button onClick={props.onNext} aria-label="Next frustule">›</button>
+          <button onClick={props.onClose} aria-label="Close">✕</button>
+        </div>
+      </div>
+      <div className={`damage-pill ${cls}`}>{fmt(f.damage)}</div>
+      <dl className="focus-grid">
+        {FOCUS_FIELDS.map((k) => (
+          <div key={k.key}>
+            <dt>{k.label}</dt>
+            <dd>
+              {fmt(f[k.key])}
+              {k.unit && f[k.key] != null && <small> {k.unit}</small>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="muted small">
+        Position ({fmt(f.x_um, 1)}, {fmt(f.y_um, 1)}) µm · {fmt(f.species_reason)}
+        {f.touches_edge ? ' · cut by the image edge' : ''}
+      </p>
     </div>
   )
 }

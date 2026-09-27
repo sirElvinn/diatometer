@@ -118,6 +118,9 @@ def process(path: str, rel: str, backend: str, out_dir: str,
         m = (label_map == row["frustule_id"]).astype(np.uint8)
         cnts, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cv2.drawContours(vis, cnts, -1, COLOURS.get(row["damage"], (255, 255, 255)), 2)
+        # simplified polygons (pixel coords of the cropped image) so a UI can draw/click them
+        row["_outline"] = [cv2.approxPolyDP(c, 1.0, True).reshape(-1, 2).tolist()
+                           for c in cnts if len(c) >= 3]
     for p in pores[:5000]:
         c = (int(p["x_um"] / info.um_per_px), int(p["y_um"] / info.um_per_px))
         cv2.circle(vis, c, max(1, int(p["diameter_um"] / info.um_per_px / 2)), (255, 0, 255), 1)
@@ -180,6 +183,8 @@ def main():
     for i, rel in enumerate(paths, 1):
         shells, pores, img_row = process(os.path.join(a.root, rel), rel, a.backend, a.out,
                                          a.sample_type)
+        for s in shells:
+            s.pop("_outline", None)             # polygons are for the web UI, not the CSV
         all_shells += shells
         all_pores += pores
         all_imgs.append(img_row)

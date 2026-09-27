@@ -148,7 +148,8 @@ def _analyze(run_id, folder, fname, image, sidecar, sample_type, backend, um_per
     img_row.update(width_px=w, height_px=h)
 
     created = storage.now_iso()
-    storage.save_run(run_id, created, fname, img_row, shells, pores)
+    outlines = {str(s["frustule_id"]): s.pop("_outline", []) for s in shells}
+    storage.save_run(run_id, created, fname, img_row, shells, pores, outlines)
     run = storage.load_run(run_id)
     _write_tables(folder, run)
     if sheets.enabled():
