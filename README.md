@@ -82,7 +82,7 @@ The app creates `images`, `frustules` and `pores` tabs with headers on the first
 
 ## Deploy (Modal, free)
 
-Live at **https://adityathakur6176--diatometer-web.modal.run**
+Live at **https://diamometer.us** (also https://adityathakur6176--diatometer-web.modal.run)
 
 [Modal](https://modal.com)'s Starter plan includes $30 of compute a month with no card. The app
 sleeps when idle, so it costs nothing between visits; the first visit after a quiet spell
@@ -98,6 +98,11 @@ modal deploy modal_app.py
 Container: 2 CPU, 4 GB RAM (one dense image peaks at about 2.1 GB).
 For Google Sheet sync on Modal, create a Modal secret named `diatometer-sheets` with the
 three variables from the section above, then deploy with `WITH_SHEETS=1 modal deploy modal_app.py`.
+
+**Custom domain:** Modal's free plan has no custom domains, so `proxy/` is a Cloudflare Worker
+that streams every request for `diamometer.us` to the Modal URL (and redirects `http://` and
+`www.` to `https://diamometer.us`). Deploy it with `cd proxy && npm install && npx wrangler deploy`
+once the domain uses Cloudflare's nameservers.
 
 The `Dockerfile` runs the same app on any container host (Render, Railway, DigitalOcean,
 a paid Hugging Face Space); give it at least 4 GB of RAM.

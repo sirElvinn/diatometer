@@ -8,8 +8,9 @@ export default {
   async fetch(request) {
     const url = new URL(request.url);
 
-    // www.diamometer.us -> diamometer.us
-    if (url.hostname === `www.${CANONICAL_HOST}`) {
+    // http:// and www. both redirect to https://diamometer.us
+    if (url.protocol === "http:" || url.hostname === `www.${CANONICAL_HOST}`) {
+      url.protocol = "https:";
       url.hostname = CANONICAL_HOST;
       return Response.redirect(url.toString(), 301);
     }
