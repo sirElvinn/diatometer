@@ -1,12 +1,3 @@
----
-title: DiatoMeter
-emoji: 🔬
-colorFrom: green
-colorTo: gray
-sdk: docker
-app_port: 7860
----
-
 # DiatoMeter
 
 **SEM image in, measurements out.** Built at &hacks XII (William & Mary, Sept 26–27 2026) for the
@@ -89,23 +80,27 @@ The app works without this; it just skips the sheet.
 The app creates `images`, `frustules` and `pores` tabs with headers on the first upload, and a
 **Public sheet ↗** link appears in the header. Never commit the key file.
 
-## Deploy (Hugging Face Spaces, free CPU)
+## Deploy (Modal, free)
 
-1. Create a new Space at https://huggingface.co/new-space and pick **Docker → Blank**.
-2. In the Space's **Settings → Variables and secrets**, add secrets:
-   `GOOGLE_SHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_JSON` (paste the whole JSON key file contents), and
-   `PUBLIC_URL` (`https://<user>-<space>.hf.space`).
-3. Push this repo to the Space:
+Live at **https://adityathakur6176--diatometer-web.modal.run**
 
-   ```bash
-   git remote add space https://huggingface.co/spaces/<user>/<space>
-   git push space main
-   ```
+[Modal](https://modal.com)'s Starter plan includes $30 of compute a month with no card. The app
+sleeps when idle, so it costs nothing between visits; the first visit after a quiet spell
+takes a few seconds to wake it. Uploaded images and results live in a persistent Modal Volume.
 
-The front matter at the top of this README tells Spaces to build the `Dockerfile` and expose port 7860.
-Free Spaces reset their disk on restart. The Google Sheet is the permanent record; the in-app
-history only covers runs since the last restart. The same Dockerfile runs on Render, Railway or
-DigitalOcean App Platform (they set `PORT` automatically).
+```bash
+pip install modal
+modal setup                                   # once, logs in through the browser
+cd frontend && npm run build && cd ..
+modal deploy modal_app.py
+```
+
+Container: 2 CPU, 4 GB RAM (one dense image peaks at about 2.1 GB).
+For Google Sheet sync on Modal, create a Modal secret named `diatometer-sheets` with the
+three variables from the section above, then deploy with `WITH_SHEETS=1 modal deploy modal_app.py`.
+
+The `Dockerfile` runs the same app on any container host (Render, Railway, DigitalOcean,
+a paid Hugging Face Space); give it at least 4 GB of RAM.
 
 ## API
 
