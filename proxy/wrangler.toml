@@ -1,0 +1,10 @@
+# diamometer.us -> Modal. Deploy with `npx wrangler deploy` once the domain is active on Cloudflare.
+name = "diatometer-proxy"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = false
+
+routes = [
+  { pattern = "diamometer.us", custom_domain = true },
+  { pattern = "www.diamometer.us", custom_domain = true },
+]
