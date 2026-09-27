@@ -114,9 +114,12 @@ def _hitachi_marker_px(a: np.ndarray, top: int) -> float | None:
             ticks[-1].append(int(c))
         else:
             ticks.append([int(c)])
-    if len(ticks) < 3:
+    if len(ticks) < 5:
         return None
     centers = [float(np.mean(t)) for t in ticks]
+    gaps = np.diff(centers)
+    if gaps.std() > 0.15 * gaps.mean():
+        return None                      # not an evenly spaced dotted marker (text, specks)
     return centers[-1] - centers[0]
 
 
@@ -166,15 +169,32 @@ def from_ocr(path: str, w: int, h: int) -> ScaleInfo | None:
         text = " ".join(pytesseract.image_to_string(big, config="--psm 6").split())
     except (pytesseract.TesseractNotFoundError, pytesseract.TesseractError):
         return None                     # no Tesseract app installed -> ask the user instead
-    # The field width is printed right after the width icon, which OCR reads
-    # as '<]' or '<['. OCR also misreads the micro sign as u / p / pu.
+    # OCR misreads the micro sign as u / p / pu.
     unit_re = r"(\d+(?:\.\d+)?)\s*(p?[uµp]m|mm|nm)"
+    to_um = {"mm": 1e3, "nm": 1e-3}
+
+    # Hitachi image without its .txt: the dotted marker's label (e.g. "10.0um") is the
+    # marker's length, so scale = label / measured tick span. Never divide it by the
+    # image width - that made everything ~4x too small.
+    a = np.array(im).astype(int)
+    span = _hitachi_marker_px(a, _dark_databar_top(a))
+    if span:
+        labels = [(n, u) for n, u in re.findall(unit_re, text) if u != "mm"]  # mm = working distance
+        if not labels:
+            return None
+        num, unit = labels[-1]                                # the marker label is printed last
+        length_um = float(num) * to_um.get(unit, 1.0)
+        return ScaleInfo(path, w, h, length_um / span, h - _dark_databar_top(a), "ocr_scale_bar",
+                         "Hitachi (no .txt)",
+                         check=f"measured the printed scale bar: {length_um:g} um over {span:.0f} px")
+
+    # Phenom screenshot: only trust the field width printed right after the width icon,
+    # which OCR reads as '<]' or '<['. Anything looser risks grabbing the scale-bar label.
     m = re.search(r"<\s*[\]\[\|{}]?\s*" + unit_re, text)
-    vals = [m.groups()] if m else re.findall(unit_re, text)[-1:]
-    if not vals:
-        return None
-    num, unit = vals[0]
-    hfw = float(num) * {"mm": 1e3, "nm": 1e-3}.get(unit, 1.0)
+    if not m:
+        return None                     # not sure -> the app asks the user for the scale
+    num, unit = m.groups()
+    hfw = float(num) * to_um.get(unit, 1.0)
     return ScaleInfo(path, w, h, hfw / w, h - top, "ocr_hfw", "Phenom (screenshot, no metadata)",
                      check=f"OCR read field width {hfw:g} um - verify by eye")
 

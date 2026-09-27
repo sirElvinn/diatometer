@@ -28,22 +28,32 @@ def _dedupe(masks: list[np.ndarray], max_frac: float = 0.5, iou_thr: float = 0.8
     if not masks:
         return []
     h, w = masks[0].shape
-    masks = [m for m in masks if 0 < m.sum() < max_frac * h * w]
-    masks.sort(key=lambda m: -m.sum())
-    kept: list[np.ndarray] = []
+    items = []                                   # (mask, area, bounding box)
     for m in masks:
+        area = int(m.sum())
+        if 0 < area < max_frac * h * w:
+            rows, cols = np.flatnonzero(m.any(axis=1)), np.flatnonzero(m.any(axis=0))
+            items.append((m, area, (rows[0], rows[-1] + 1, cols[0], cols[-1] + 1)))
+    items.sort(key=lambda it: -it[1])
+    kept: list[tuple] = []
+    for m, area, (r0, r1, c0, c1) in items:
         dup = False
-        for k in kept:
-            inter = np.logical_and(m, k).sum()
+        for k, karea, (s0, s1, d0, d1) in kept:
+            # only compare inside the overlap of the two bounding boxes (big photos have
+            # hundreds of masks; full-frame comparisons took minutes)
+            y0, y1, x0, x1 = max(r0, s0), min(r1, s1), max(c0, d0), min(c1, d1)
+            if y0 >= y1 or x0 >= x1:
+                continue
+            inter = int(np.logical_and(m[y0:y1, x0:x1], k[y0:y1, x0:x1]).sum())
             if inter == 0:
                 continue
-            union = np.logical_or(m, k).sum()
-            if inter / union > iou_thr or inter / m.sum() > 0.9:   # same object or nested copy
+            union = area + karea - inter
+            if inter / union > iou_thr or inter / area > 0.9:   # same object or nested copy
                 dup = True
                 break
         if not dup:
-            kept.append(m)
-    return kept
+            kept.append((m, area, (r0, r1, c0, c1)))
+    return [k[0] for k in kept]
 
 
 def _ultralytics_masks(img_gray: np.ndarray, kind: str) -> list[np.ndarray]:

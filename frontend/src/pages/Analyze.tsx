@@ -46,10 +46,13 @@ export default function Analyze() {
     const list = Array.from(files)
     const img = list.find((f) => IMAGE_EXT.some((e) => f.name.toLowerCase().endsWith(e)))
     const txt = list.find((f) => f.name.toLowerCase().endsWith('.txt'))
+    const stem = (f: File) => f.name.replace(/\.[^.]+$/, '').toLowerCase()
     if (img) {
       setImage(img)
       setError(null)
       setNeedsScale(false)
+      // a .txt left over from the previous photo would give this one the wrong scale
+      if (!txt) setSidecar((old) => (old && stem(old) === stem(img) ? old : null))
     }
     if (txt) setSidecar(txt)
     if (!img && !txt) setError('Drop a .tif, .jpg or .png SEM image (plus its .txt file for Hitachi images).')
