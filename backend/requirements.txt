@@ -3,7 +3,7 @@ numpy
 pillow
 scipy
 scikit-image
-scikit-learn
+scikit-learn==1.9.1   # must match the version sample_type_model.joblib was saved with
 opencv-python-headless
 pandas
 openpyxl
