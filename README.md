@@ -216,7 +216,7 @@ Click **Download .xlsx** and you get one file with these tabs:
 | --- | --- |
 | 📏 Our Thaps shells vs. the science books | We measure a median of **3.53 µm**; published size for lab-grown Thaps is **3.5–3.9 µm** ✅ |
 | 📐 Our ruler reading vs. the microscope's own calibration | Matches within **0.12%** on all 13 Hitachi photos ✅ |
-| 🔍 Sample-type guess on photo batches it never saw | **77%** right overall, **86%** right when it's confident (it says "unsure" otherwise). A model that only knew the zoom level scored 47%, so it's really looking at the shells. |
+| 🔍 Sample-type guess on photo batches it never saw | **77%** right overall, **86%** right when it's confident (it says "unsure" otherwise). For comparison: always guessing the most common type scores 47%, and a model that only knows the zoom level scores 59%, so it's really looking at the shells. |
 | ⏱️ Speed | About **2–15 seconds** per photo |
 
 ---
