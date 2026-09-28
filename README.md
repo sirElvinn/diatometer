@@ -410,4 +410,5 @@ The app then adds `images`, `frustules` and `pores` tabs and shows a **Public sh
 - Species sizes from the literature: *Thalassiosira pseudonana*, Poulsen et al. 2023 (*J. Phycology*) and the USGS NAS species profile; *Didymosphenia geminata*, [diatoms.org](https://diatoms.org) and Patrick & Reimer (1975).
 
 **Built with:** Python · FastAPI · PyTorch · FastSAM · scikit-image · scikit-learn · OpenCV · React · TypeScript · Vite · Modal · Cloudflare Workers
+
 **Team Members:** Damir Syrlybayev, Aditya Thakur
