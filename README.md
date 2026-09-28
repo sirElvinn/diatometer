@@ -404,7 +404,7 @@ The app then adds `images`, `frustules` and `pores` tabs and shows a **Public sh
 
 ## 🙌 Credits
 
-- Built in 24 hours at **&hacks XII** at William & Mary, with help from an AI coding assistant ([Claude Code](https://claude.com/claude-code)).
+- Built in 24 hours at **&hacks XII** at William & Mary University, with help from an AI coding assistant ([Claude Code](https://claude.com/claude-code)).
 - SEM images and the challenge come from the **W&M Nano & Biomaterials Lab**, which also suggested the key idea: *use the relative sizes of the organisms*.
 - Outlining by [FastSAM](https://github.com/CASIA-IVA-Lab/FastSAM) through [Ultralytics](https://github.com/ultralytics/ultralytics). Measurements with [scikit-image](https://scikit-image.org/), [scikit-learn](https://scikit-learn.org/), [OpenCV](https://opencv.org/) and [Tesseract](https://github.com/tesseract-ocr/tesseract).
 - Species sizes from the literature: *Thalassiosira pseudonana*, Poulsen et al. 2023 (*J. Phycology*) and the USGS NAS species profile; *Didymosphenia geminata*, [diatoms.org](https://diatoms.org) and Patrick & Reimer (1975).
