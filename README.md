@@ -411,4 +411,4 @@ The app then adds `images`, `frustules` and `pores` tabs and shows a **Public sh
 
 **Built with:** Python · FastAPI · PyTorch · FastSAM · scikit-image · scikit-learn · OpenCV · React · TypeScript · Vite · Modal · Cloudflare Workers
 
-**Team Members:** Damir Syrlybayev, Aditya Thakur
+**Team Members:** Damir Syrlybayev, Aditya Thakur, Menilik King
